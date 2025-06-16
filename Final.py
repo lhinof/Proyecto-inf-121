@@ -1,3 +1,5 @@
+import pickle
+from datetime import date
 
 class FeriaDeSalud:
     def __init__(self, nombre, fecha, lugar, tipo):
@@ -10,11 +12,16 @@ class FeriaDeSalud:
     def registrar_usuario(self, usuario):
         self.usuarios.append(usuario)
 
-    def registrar_servicio(self, usuario, servicio):
-        print(f"\nEl usuario {usuario.nombre} ha sido asignado al servicio '{servicio.nombre}'")
+    def guardar_datos(self):
+        with open("datos.dat", "wb") as archivo:
+            pickle.dump(self.usuarios, archivo)
 
-    def quitar_usuario(self, usuario):
-        self.usuarios.remove(usuario)
+    def cargar_datos(self):
+        try:
+            with open("datos.dat", "rb") as archivo:
+                self.usuarios = pickle.load(archivo)
+        except FileNotFoundError:
+            pass
 
     def mostrar_usuarios(self):
         print(f"\nLista de participantes registrados en '{self.nombre}':\n")
@@ -29,16 +36,12 @@ class PuestoDeTrabajo:
         self.numero_de_puesto = numero_de_puesto
         self.capacidad = capacidad
         self.personas_dentro = 0
+
     def mostrar_datos(self):
         print(f"\nPuesto de trabajo: {self.nombre}")
         print(f"Tipo de enfermedades: {self.tipo_de_enfermedades}")
         print(f"Número de puesto: {self.numero_de_puesto}")
         print(f"Capacidad: {self.capacidad}")
-
-    def determinar_concurrencia(self):
-        return self.personas_dentro
-    def consultar_capacidad(self):
-        return self.capacidad - self.personas_dentro
 
 class Consulta:
     def __init__(self, diagnostico, descripcion, tratamientos, medico, usuario):
@@ -48,20 +51,10 @@ class Consulta:
         self.medico = medico
         self.usuario = usuario
 
-    def ejecutar_consulta(self):
-        print("\nConsulta ejecutada")
-    def mostrar_diagnostico(self):
-        print(f"Diagnóstico: {self.diagnostico}")
-    def tratamiento_correspondiente(self):
-        print(f"Tratamiento correspondiente: {self.tratamientos[0].nombre}")
-
 class Tratamiento:
     def __init__(self, nombre, descripcion):
         self.nombre = nombre
         self.descripcion = descripcion
-
-    def ejecutar_tratamiento(self):
-        print(f"Tratamiento '{self.nombre}' ejecutado. Descripción: {self.descripcion}")
 
 class Persona:
     def __init__(self, nombre, edad, genero):
@@ -79,8 +72,6 @@ class Usuario(Persona):
         super().__init__(nombre, edad, genero)
         self.vacunas = vacunas if vacunas else []
 
-    def inquietudes(self):
-        print("Inquietudes del usuario")
     def mostrar_info(self):
         super().mostrar_info()
         print(f"Vacunas: {self.vacunas}")
@@ -90,8 +81,6 @@ class Paciente(Usuario):
         super().__init__(nombre, edad, genero, vacunas)
         self.historial_medico = historial_medico if historial_medico else []
 
-    def agregar_historial_medico(self, entrada):
-        self.historial_medico.append(entrada)
     def mostrar_info(self):
         super().mostrar_info()
         print(f"Historial médico: {self.historial_medico}")
@@ -101,72 +90,43 @@ class Medico(Usuario):
         super().__init__(nombre, edad, genero)
         self.especialidad = especialidad
 
-    def atender_paciente(self, paciente):
-        print(f"Atendiendo al paciente {paciente.nombre}")
     def mostrar_info(self):
         super().mostrar_info()
         print(f"Especialidad: {self.especialidad}")
 
-feria = FeriaDeSalud(
-    nombre="Feria de Salud UMSA",
-    fecha="2025-06-10",
-    lugar="Municipio de Sapahaqui",
-    tipo="Feria Estudiantil Universitaria"
-)
 
+if __name__ == "__main__":
+    feria = FeriaDeSalud("Feria de Salud La Paz", date(2025, 6, 11), "La Paz, Bolivia", "Salud Pública")
+    feria.cargar_datos()
 
-puesto_embarazo = PuestoDeTrabajo(
-    nombre="Control de pruebas de embarazo",
-    tipo_de_enfermedades="Prueba de embarazo por sangre y orina",
-    numero_de_puesto=1,
-    capacidad=30
-)
+    while True:
+        print("\n1. Registrar paciente")
+        print("2. Registrar médico")
+        print("3. Mostrar usuarios")
+        print("4. Guardar datos")
+        print("5. Salir")
 
+        opcion = input("Ingrese su opción: ")
 
-tratamiento_1 = Tratamiento(
-    nombre="Reposo de 3 días",
-    descripcion="El paciente debe guardar reposo absoluto y tomar abundante agua."
-)
-
-medico_1 = Medico(
-    nombre="Dra. Ana Pérez",
-    edad=35,
-    genero="Femenino",
-    especialidad="Ginecología"
-)
-
-paciente_1 = Paciente(
-    nombre="Lucía Quispe",
-    edad=22,
-    genero="Femenino",
-    vacunas=["COVID-19", "Influenza"],
-    historial_medico=["Dolor abdominal"]
-)
-
-feria.registrar_usuario(paciente_1)
-
-feria.registrar_servicio(paciente_1, puesto_embarazo)
-
-puesto_embarazo.mostrar_datos()
-
-consulta_1 = Consulta(
-    diagnostico="Posible infección urinaria",
-    descripcion="Paciente con dolor abdominal bajo",
-    tratamientos=[tratamiento_1],
-    medico=medico_1,
-    usuario=paciente_1
-)
-
-consulta_1.ejecutar_consulta()
-consulta_1.mostrar_diagnostico()
-consulta_1.tratamiento_correspondiente()
-
-
-tratamiento_1.ejecutar_tratamiento()
-
-feria.mostrar_usuarios()
-
-
-
-
-
+        if opcion == "1":
+            nombre = input("Ingrese nombre del paciente: ")
+            edad = int(input("Ingrese edad del paciente: "))
+            genero = input("Ingrese género del paciente: ")
+            paciente = Paciente(nombre, edad, genero)
+            feria.registrar_usuario(paciente)
+        elif opcion == "2":
+            nombre = input("Ingrese nombre del médico: ")
+            edad = int(input("Ingrese edad del médico: "))
+            genero = input("Ingrese género del médico: ")
+            especialidad = input("Ingrese especialidad del médico: ")
+            medico = Medico(nombre, edad, genero, especialidad)
+            feria.registrar_usuario(medico)
+        elif opcion == "3":
+            feria.mostrar_usuarios()
+        elif opcion == "4":
+            feria.guardar_datos()
+            print("Datos guardados correctamente")
+        elif opcion == "5":
+            break
+        else:
+            print("Opción inválida")

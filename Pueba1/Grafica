@@ -1,0 +1,103 @@
+import tkinter as tk
+from tkinter import ttk
+from datetime import date
+from Implementacionper import FeriaDeSalud, Paciente, Medico, Consulta, casos_de_ejemplo
+
+class FeriaDeSaludApp:
+    def __init__(self, root, feria):
+        self.root = root
+        self.feria = feria
+        self.root.title("Feria de Salud")
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(pady=10, expand=True)
+        self.pacientes_tab = ttk.Frame(self.notebook)
+        self.medicos_tab = ttk.Frame(self.notebook)
+        self.consultas_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.pacientes_tab, text="Pacientes")
+        self.notebook.add(self.medicos_tab, text="Médicos")
+        self.notebook.add(self.consultas_tab, text="Consultas")
+        self.pacientes_tree = ttk.Treeview(self.pacientes_tab)
+        self.pacientes_tree['columns'] = ('Nombre', 'Edad', 'Género')
+        self.pacientes_tree.column("#0", width=0, stretch=tk.NO)
+        self.pacientes_tree.column("Nombre", anchor=tk.W, width=100)
+        self.pacientes_tree.column("Edad", anchor=tk.W, width=50)
+        self.pacientes_tree.column("Género", anchor=tk.W, width=50)
+        self.pacientes_tree.heading("#0", text='', anchor=tk.W)
+        self.pacientes_tree.heading("Nombre", text='Nombre', anchor=tk.W)
+        self.pacientes_tree.heading("Edad", text='Edad', anchor=tk.W)
+        self.pacientes_tree.heading("Género", text='Género', anchor=tk.W)
+        self.pacientes_tree.pack()
+        self.agregar_paciente_button = tk.Button(self.pacientes_tab, text="Agregar Paciente", command=self.agregar_paciente)
+        self.agregar_paciente_button.pack()
+        self.medicos_tree = ttk.Treeview(self.medicos_tab)
+        self.medicos_tree['columns'] = ('Nombre', 'Edad', 'Género', 'Especialidad')
+        self.medicos_tree.column("#0", width=0, stretch=tk.NO)
+        self.medicos_tree.column("Nombre", anchor=tk.W, width=100)
+        self.medicos_tree.column("Edad", anchor=tk.W, width=50)
+        self.medicos_tree.column("Género", anchor=tk.W, width=50)
+        self.medicos_tree.column("Especialidad", anchor=tk.W, width=100)
+        self.medicos_tree.heading("#0", text='', anchor=tk.W)
+        self.medicos_tree.heading("Nombre", text='Nombre', anchor=tk.W)
+        self.medicos_tree.heading("Edad", text='Edad', anchor=tk.W)
+        self.medicos_tree.heading("Género", text='Género', anchor=tk.W)
+        self.medicos_tree.heading("Especialidad", text='Especialidad', anchor=tk.W)
+        self.medicos_tree.pack()
+        self.consultas_tree = ttk.Treeview(self.consultas_tab)
+        self.consultas_tree['columns'] = ('Fecha', 'Paciente', 'Médico', 'Diagnóstico')
+        self.consultas_tree.column("#0", width=0, stretch=tk.NO)
+        self.consultas_tree.column("Fecha", anchor=tk.W, width=100)
+        self.consultas_tree.column("Paciente", anchor=tk.W, width=100)
+        self.consultas_tree.column("Médico", anchor=tk.W, width=100)
+        self.consultas_tree.column("Diagnóstico", anchor=tk.W, width=200)
+        self.consultas_tree.heading("#0", text='', anchor=tk.W)
+        self.consultas_tree.heading("Fecha", text='Fecha', anchor=tk.W)
+        self.consultas_tree.heading("Paciente", text='Paciente', anchor=tk.W)
+        self.consultas_tree.heading("Médico", text='Médico', anchor=tk.W)
+        self.consultas_tree.heading("Diagnóstico", text='Diagnóstico', anchor=tk.W)
+        self.consultas_tree.pack()
+        self.cargar_pacientes()
+        self.cargar_medicos()
+        self.cargar_consultas()
+
+    def agregar_paciente(self):
+        self.agregar_paciente_window = tk.Toplevel(self.root)
+        self.agregar_paciente_window.title("Agregar Paciente")
+        tk.Label(self.agregar_paciente_window, text="Nombre:").pack()
+        self.nombre_entry = tk.Entry(self.agregar_paciente_window)
+        self.nombre_entry.pack()
+        tk.Label(self.agregar_paciente_window, text="Edad:").pack()
+        self.edad_entry = tk.Entry(self.agregar_paciente_window)
+        self.edad_entry.pack()
+        tk.Label(self.agregar_paciente_window, text="Género:").pack()
+        self.genero_entry = tk.Entry(self.agregar_paciente_window)
+        self.genero_entry.pack()
+        self.guardar_paciente_button = tk.Button(self.agregar_paciente_window, text="Guardar Paciente", command=self.guardar_paciente)
+        self.guardar_paciente_button.pack()
+
+    def guardar_paciente(self):
+        nombre = self.nombre_entry.get()
+        edad = self.edad_entry.get()
+        genero = self.genero_entry.get()
+        paciente = Paciente(nombre, int(edad), genero)
+        self.feria.registrar_usuario(paciente)
+        self.agregar_paciente_window.destroy()
+        self.pacientes_tree.delete(*self.pacientes_tree.get_children())
+        self.cargar_pacientes()
+
+    def cargar_pacientes(self):
+        for paciente in self.feria.usuarios:
+            self.pacientes_tree.insert('', 'end', values=(paciente.nombre, paciente.edad, paciente.genero))
+
+    def cargar_medicos(self):
+        for medico in self.feria.medicos:
+            self.medicos_tree.insert('', 'end', values=(medico.nombre, medico.edad, medico.genero, medico.especialidad))
+
+    def cargar_consultas(self):
+        for consulta in self.feria.consultas:
+            self.consultas_tree.insert('', 'end', values=(consulta.fecha, consulta.usuario.nombre, consulta.medico.nombre, consulta.diagnostico))
+
+if __name__ == "__main__":
+    feria = casos_de_ejemplo()
+    root = tk.Tk()
+    app = FeriaDeSaludApp(root, feria)
+    root.mainloop()
